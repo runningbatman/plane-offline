@@ -1,12 +1,18 @@
-name: Export Plane Offline Images
+name: Export Plane Images
 on:
   workflow_dispatch:
 
 jobs:
-  export:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Pull all Plane images
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull all images
         run: |
           docker pull makeplane/plane-frontend:stable
           docker pull makeplane/plane-api:stable
@@ -16,7 +22,7 @@ jobs:
           docker pull redis:7
           docker pull minio/minio:latest
 
-      - name: Save images to tar file
+      - name: Save to tar file
         run: |
           docker save -o plane-offline-images.tar \
             makeplane/plane-frontend:stable \
@@ -25,7 +31,7 @@ jobs:
             makeplane/plane-proxy:stable \
             postgres:15 redis:7 minio/minio:latest
 
-      - name: Upload tar file as artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: plane-offline-images
