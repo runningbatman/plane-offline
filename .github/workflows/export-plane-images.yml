@@ -1,4 +1,4 @@
-name: Export Plane Images
+name: Build Plane Offline Package
 on:
   workflow_dispatch:
 
@@ -6,35 +6,36 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Pull all images from GitHub Registry
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Pull all required images
         run: |
-          docker pull ghcr.io/makeplane/plane-frontend:stable
-          docker pull ghcr.io/makeplane/plane-api:stable
-          docker pull ghcr.io/makeplane/plane-worker:stable
-          docker pull ghcr.io/makeplane/plane-proxy:stable
-          docker pull postgres:15
-          docker pull redis:7
+          docker pull makeplane/plane-frontend:v2.10.0
+          docker pull makeplane/plane-api:v2.10.0
+          docker pull makeplane/plane-worker:v2.10.0
+          docker pull makeplane/plane-proxy:v2.10.0
+          docker pull postgres:15-alpine
+          docker pull redis:7-alpine
           docker pull minio/minio:latest
 
-      - name: Rename to original names
-        run: |
-          docker tag ghcr.io/makeplane/plane-frontend:stable makeplane/plane-frontend:stable
-          docker tag ghcr.io/makeplane/plane-api:stable makeplane/plane-api:stable
-          docker tag ghcr.io/makeplane/plane-worker:stable makeplane/plane-worker:stable
-          docker tag ghcr.io/makeplane/plane-proxy:stable makeplane/plane-proxy:stable
-
-      - name: Save to tar file
+      - name: Save images to tar archive
         run: |
           docker save -o plane-offline-images.tar \
-            makeplane/plane-frontend:stable \
-            makeplane/plane-api:stable \
-            makeplane/plane-worker:stable \
-            makeplane/plane-proxy:stable \
-            postgres:15 redis:7 minio/minio:latest
+            makeplane/plane-frontend:v2.10.0 \
+            makeplane/plane-api:v2.10.0 \
+            makeplane/plane-worker:v2.10.0 \
+            makeplane/plane-proxy:v2.10.0 \
+            postgres:15-alpine \
+            redis:7-alpine \
+            minio/minio:latest
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: plane-offline-images
+          name: plane-offline-package
           path: plane-offline-images.tar
-          retention-days: 7
+          retention-days: 30
