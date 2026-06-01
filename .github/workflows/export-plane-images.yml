@@ -6,21 +6,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Pull all images
+      - name: Pull all images from GitHub Registry
         run: |
-          docker pull makeplane/plane-frontend:stable
-          docker pull makeplane/plane-api:stable
-          docker pull makeplane/plane-worker:stable
-          docker pull makeplane/plane-proxy:stable
+          docker pull ghcr.io/makeplane/plane-frontend:stable
+          docker pull ghcr.io/makeplane/plane-api:stable
+          docker pull ghcr.io/makeplane/plane-worker:stable
+          docker pull ghcr.io/makeplane/plane-proxy:stable
           docker pull postgres:15
           docker pull redis:7
           docker pull minio/minio:latest
+
+      - name: Rename to original names
+        run: |
+          docker tag ghcr.io/makeplane/plane-frontend:stable makeplane/plane-frontend:stable
+          docker tag ghcr.io/makeplane/plane-api:stable makeplane/plane-api:stable
+          docker tag ghcr.io/makeplane/plane-worker:stable makeplane/plane-worker:stable
+          docker tag ghcr.io/makeplane/plane-proxy:stable makeplane/plane-proxy:stable
 
       - name: Save to tar file
         run: |
